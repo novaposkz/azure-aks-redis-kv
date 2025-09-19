@@ -102,7 +102,7 @@ resource "kubectl_manifest" "deployment" {
   yaml_body = templatefile("${path.module}/k8s-manifests/deployment.yaml.tftpl", {
     acr_login_server = module.acr.registry_login_server,
     app_image_name   = var.image_name,
-    image_tag        = "v1_oto",
+    image_tag        = "v1",
   })
 
   depends_on = [module.acr, module.keyvault, module.redis, module.aks, kubectl_manifest.secret_provider]

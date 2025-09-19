@@ -8,7 +8,7 @@ resource "azurerm_container_group" "this" {
 
   container {
     name   = "python-app"
-    image  = "${var.acr_login_server}/${var.image_name}:v1_oto"
+    image  = "${var.acr_login_server}/${var.image_name}:v1"
     cpu    = 1
     memory = 1.5
 

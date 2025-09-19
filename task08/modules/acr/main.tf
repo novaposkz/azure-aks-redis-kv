@@ -19,7 +19,7 @@ resource "azurerm_container_registry_task" "build_task" {
     dockerfile_path      = var.dockerfile_path
     context_path         = var.context_path
     context_access_token = var.git_pat
-    image_names          = ["${var.image_name}:v1_oto"]
+    image_names          = ["${var.image_name}:v1"]
   }
 
   depends_on = [azurerm_container_registry.this]
