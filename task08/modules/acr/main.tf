@@ -16,10 +16,9 @@ resource "azurerm_container_registry_task" "build_task" {
   }
 
   docker_step {
-    dockerfile_path      = var.dockerfile_path
-    context_path         = var.context_path
-    context_access_token = var.git_pat
-    image_names          = ["${var.image_name}:v1"]
+    dockerfile_path = var.dockerfile_path
+    context_path    = var.context_path
+    image_names     = ["${var.image_name}:v1"]
   }
 
   depends_on = [azurerm_container_registry.this]
@@ -28,5 +27,14 @@ resource "azurerm_container_registry_task" "build_task" {
 resource "azurerm_container_registry_task_schedule_run_now" "run_schedule" {
   container_registry_task_id = azurerm_container_registry_task.build_task.id
 
-  depends_on = [azurerm_container_registry_task.build_task]
+  depends_on = [
+    azurerm_container_registry_task.build_task
+  ]
+
+  # Добавляем timeout для задачи
+  timeouts {
+    create = "15m"
+    read   = "5m"
+    delete = "10m"
+  }
 }
