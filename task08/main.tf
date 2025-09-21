@@ -1,10 +1,17 @@
+# ========================================
+# MAIN RESOURCE GROUP
+# ========================================
+# This resource group will contain all Azure resources for this deployment
 resource "azurerm_resource_group" "main" {
   name     = local.rg_name
   location = var.location
   tags     = var.tags
 }
 
-
+# ========================================
+# AZURE KEY VAULT MODULE
+# ========================================
+# Key Vault for storing sensitive configuration like Redis connection strings
 module "keyvault" {
   source              = "./modules/keyvault"
   resource_group_name = azurerm_resource_group.main.name
@@ -16,6 +23,10 @@ module "keyvault" {
   depends_on = [azurerm_resource_group.main]
 }
 
+# ========================================
+# AZURE REDIS CACHE MODULE
+# ========================================
+# Redis cache for session storage and caching
 module "redis" {
   source                        = "./modules/redis"
   resource_group_name           = azurerm_resource_group.main.name
@@ -32,6 +43,10 @@ module "redis" {
   depends_on = [module.keyvault]
 }
 
+# ========================================
+# AZURE CONTAINER REGISTRY MODULE
+# ========================================
+# Container registry for storing Docker images
 module "acr" {
   source              = "./modules/acr"
   acr_name            = local.acr_name
@@ -47,6 +62,10 @@ module "acr" {
   depends_on = [azurerm_resource_group.main]
 }
 
+# ========================================
+# AZURE CONTAINER INSTANCE MODULE
+# ========================================
+# Container instance for running the Flask application
 module "aci" {
   source                         = "./modules/aci"
   aci_name                       = local.aci_name
@@ -63,6 +82,10 @@ module "aci" {
   depends_on = [module.acr, module.redis]
 }
 
+# ========================================
+# AZURE KUBERNETES SERVICE MODULE
+# ========================================
+# Managed Kubernetes cluster for container orchestration
 module "aks" {
   source = "./modules/aks"
 
@@ -84,7 +107,10 @@ module "aks" {
   depends_on = [module.acr, module.keyvault, module.redis]
 }
 
-############################# THIS IS THE PROBLEM
+# ========================================
+# KUBERNETES SECRET PROVIDER CLASS
+# ========================================
+# Secret provider class for accessing Key Vault secrets in AKS
 resource "kubectl_manifest" "secret_provider" {
   yaml_body = templatefile("${path.module}/k8s-manifests/secret-provider.yaml.tftpl", {
     aks_kv_access_identity_id  = module.aks.aks_agentpool_identity_client_id,
@@ -96,8 +122,11 @@ resource "kubectl_manifest" "secret_provider" {
 
   depends_on = [module.aks, module.keyvault]
 }
-#############################
 
+# ========================================
+# KUBERNETES DEPLOYMENT
+# ========================================
+# Deployment for the Flask application pods
 resource "kubectl_manifest" "deployment" {
   yaml_body = templatefile("${path.module}/k8s-manifests/deployment.yaml.tftpl", {
     acr_login_server = module.acr.registry_login_server,
@@ -115,7 +144,10 @@ resource "kubectl_manifest" "deployment" {
   }
 }
 
-
+# ========================================
+# KUBERNETES SERVICE
+# ========================================
+# LoadBalancer service to expose the application externally
 resource "kubectl_manifest" "service" {
   yaml_body = file("${path.module}/k8s-manifests/service.yaml")
 
