@@ -10,7 +10,7 @@ redis_hostname_secret_name    = "redis-hostname"
 
 acr_sku                = "Basic"
 dockerfile_path        = "Dockerfile"
-context_path           = "https://github.com/novaposkz/azure-aks-redis-kv#main:application"
+context_path           = "https://github.com/novaposkz/azure-aks-redis-kv#main:task08/application"
 image_name             = "cmtr-f4p05tns-mod8-app"
 node_pool_name         = "system"
 node_pool_count        = 1
